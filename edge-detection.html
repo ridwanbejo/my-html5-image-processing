@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>JS Image Processing</title>
+	</head>
+	<body>	
+		<h1>Canvas Image Processing - Edge Detection</h1>
+		<canvas id="viewport" height="500" width="500"></canvas>
+		<br/>
+		<button onclick="changeFilter('original');">original</button>
+		<button onclick="changeFilter('grayscale_luminous');">grayscale luminous</button>
+		<button onclick="changeFilter('invert');">invert</button>
+		<button onclick="changeFilter('binary');">binary</button>
+		<br/>
+		<button onclick="edgeDetection('roberts');">roberts</button>
+		<button onclick="edgeDetection('laplacian');">laplacian</button>
+		<button onclick="edgeDetection('prewitt');">prewitt</button>
+		<button onclick="edgeDetection('sobel');">sobel</button>
+		<button onclick="edgeDetection('freiChen');">frei_chen</button>
+		<br/><br/>
+		<ul>
+			<li>threshold: <input type="text" id="threshold" /></li> 
+		</ul>
+		
+		<script type="text/javascript">
+			var canvas = document.getElementById('viewport');
+			var context = canvas.getContext('2d');
+			var image_src = "./img/demo_4.jpg";
+
+			function getImgCanvasSize(width, height)
+            {
+                var canvas_width = 500;
+                var canvas_height = 500;
+
+                w_ratio = width / width;
+                h_ratio = height / width;
+            
+                if ( width < height)
+                {
+                    w_ratio = width / height;
+                    h_ratio = height / height;
+                }    
+
+                data = {
+                    width: Math.round(canvas_width * w_ratio), 
+                    height : Math.round(canvas_height *  h_ratio), 
+                }
+
+                return data;
+                
+                delete w_ratio;
+                delete h_ratio;
+            }
+
+			window.onload = function (){
+
+				var image = new Image();
+				
+				image.src = image_src;
+				
+				image.onload = function()
+				{
+					ratio = getImgCanvasSize(image.width, image.height);   
+					canvas.width = ratio.width;
+					canvas.height = ratio.height;
+					
+					context.drawImage(image, 0, 0, ratio.width, ratio.height);
+				}
+			};
+			
+			function changeFilter (mode){
+
+				if (mode == 'original') {
+					original(image_src);
+				}
+				else {
+					var imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+					
+					if (mode == 'grayscale_luminous') {
+						imageDataTemp = grayscale_luminous (imageData);
+					}
+					else if (mode == 'invert') {
+						imageDataTemp = invert(imageData);
+					}
+					else if (mode == 'binary') {
+						imageDataTemp = binary(imageData);
+					}
+					
+					console.log(imageDataTemp);
+
+					context.putImageData(imageDataTemp, 0, 0);
+				}
+			}
+
+			function original (path)
+			{
+				var image = new Image();
+				
+				image.src = path;
+				
+				image.onload = function()
+				{
+					ratio = getImgCanvasSize(image.width, image.height);   
+					canvas.width = ratio.width;
+					canvas.height = ratio.height;
+					context.drawImage(image, 0, 0, ratio.width, ratio.height);
+				}
+			}
+
+			function invert(pixels)
+			{
+				/*
+					nilai setiap pixel menjadi kebalikan nya 255 - pixel asal
+				*/
+				var data = pixels.data;
+				
+				for (var idx=0; idx<data.length; idx+=4) {
+					data[idx] = 255 - data[idx];
+					data[idx + 1] = 255 - data[idx + 1];
+					data[idx + 2] = 255 - data[idx + 2];
+				}
+				
+				pixels.data = data;
+
+				return pixels;
+			}
+
+			function grayscale_luminous (pixels)
+			{
+				/*
+					nilai setiap komponen warna dari pixel diubah menjadi derajat keabuan : luminosity
+				*/
+				
+				var d = pixels.data;
+				
+				for (var i=0; i<d.length; i+=4) {
+					var r = d[i];
+					var g = d[i+1];
+					var b = d[i+2];
+					var v = 0.2126*r + 0.7152*g + 0.0722*b;
+					d[i] = d[i+1] = d[i+2] = v
+				}
+				
+				pixels.data = d;
+
+				return pixels;
+			}
+
+			function binary(pixels)
+			{
+				var d = pixels.data;
+				threshold_val = document.getElementById('threshold').value;
+
+				for (var i=0; i<d.length; i+=4) {
+				
+					var r = d[i];
+					var g = d[i+1];
+					var b = d[i+2];
+					var v = (r + g + b) / 3;
+					
+					if (v >= threshold_val) 
+					{
+						v = 0;
+					} 
+					else 
+					{
+						v = 255;
+					}
+
+					d[i] = d[i+1] = d[i+2] = v;
+				}
+				
+				pixels.data = d;
+				return pixels;
+			}
+
+			function edgeDetection(mode){
+
+				var canvas = document.getElementById('viewport');
+				var context = canvas.getContext('2d');
+				var imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+				
+				var worker = new Worker('edge-detection.js');
+				
+				worker.postMessage({ 'canvas_width' : canvas.width, 'canvas_height': canvas.height, 'imageData': imageData.data, 'mode': mode });
+
+				worker.onmessage = function(e) { 
+					console.log('on message dari webworker user....');
+					imageDataTemp = new ImageData(e.data.new_image_data, canvas.width, canvas.height);
+						
+					context.putImageData(imageDataTemp, 0, 0);
+				};
+
+				worker.onerror = function (e) {
+					console.log('worker error...');
+					console.log(e);
+				}
+			}
+
+		</script>
+	</body>
+</html>
