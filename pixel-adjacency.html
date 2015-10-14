@@ -13,6 +13,8 @@
 		<button onclick="changeFilter('binary');">binary</button>
 		<br/>
 		<button onclick="pixelAdjacency('edge-filter');">edge filter</button>
+		<button onclick="pixelAdjacency('average-filter');">average filter</button>
+		<button onclick="pixelAdjacency('median-filter');">median filter</button>
 		<br/>
 		<ul>
 			<li>threshold - 1: <input type="text" id="threshold" /></li> 
@@ -23,7 +25,7 @@
 			
 			var canvas = document.getElementById('viewport');
 			var context = canvas.getContext('2d');
-			var image_src = "./img/demo_7.png";
+			var image_src = "./img/demo_9.jpg";
 
 			function getImgCanvasSize(width, height)
             {
@@ -79,9 +81,9 @@
 
 				worker.onmessage = function(e) { 
 					console.log('on message dari webworker user....');
-					// imageDataTemp = new ImageData(e.data.new_image_data, canvas.width, canvas.height);
+					imageDataTemp = new ImageData(e.data.new_image_data, canvas.width, canvas.height);
 						
-					// context.putImageData(imageDataTemp, 0, 0);
+					context.putImageData(imageDataTemp, 0, 0);
 				};
 
 				worker.onerror = function (e) {
@@ -202,7 +204,7 @@
 				return pixels;
 			}
 
-			
+
 		</script>
 	</body>
 </html>

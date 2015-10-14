@@ -87,9 +87,10 @@ function edgeFilter(matrix, image_data)
 	var temp_pixel_matrix = makeZeroMatrix(image_data);
 	console.log('edgeFilters...');
 		
-	for (var y = 2; y < pixel_matrix.length - 1; y ++) {
-		for (var x = 2; x < pixel_matrix[y].length - 1; x++) {
+	for (var y = 1; y < pixel_matrix.length - 1; y ++) {
+		for (var x = 1; x < pixel_matrix[y].length - 1; x++) {
 
+			curr_pixel = pixel_matrix[y][x];
 			temp_pixel_1 = pixel_matrix[y-1][x-1];
 			temp_pixel_2 = pixel_matrix[y-1][x];
 			temp_pixel_3 = pixel_matrix[y-1][x+1];
@@ -99,9 +100,119 @@ function edgeFilter(matrix, image_data)
 			temp_pixel_7 = pixel_matrix[y+1][x];
 			temp_pixel_8 = pixel_matrix[y+1][x+1];
 			
-			result_r = Math.sqrt(Math.pow((temp_pixel_1.r - temp_pixel_2.r) , 2) + Math.pow((temp_pixel_3.r - temp_pixel_4.r) , 2));
-			// result_g = Math.sqrt(Math.pow((temp_pixel_1.g - temp_pixel_2.g) , 2) + Math.pow((temp_pixel_3.g - temp_pixel_4.g) , 2));
-			// result_b = Math.sqrt(Math.pow((temp_pixel_1.b - temp_pixel_2.b) , 2) + Math.pow((temp_pixel_3.b - temp_pixel_4.b) , 2));
+			edge_filter_arr = [temp_pixel_1.r, temp_pixel_2.r, temp_pixel_3.r, temp_pixel_4.r, temp_pixel_5.r, temp_pixel_6.r, temp_pixel_7.r, temp_pixel_8.r];
+			// console.log(edge_filter_arr);
+
+			max_pixel_val = Math.max(...edge_filter_arr);
+			min_pixel_val = Math.min(...edge_filter_arr);
+
+			// proses edge filter
+			result_r = 0;
+			
+			// result_g = curr_pixel.g;
+			// result_b = curr_pixel.b;
+			// res = [curr_pixel.r, result_r, min_pixel_val, max_pixel_val];
+
+			if (curr_pixel.r < min_pixel_val)
+			{
+				result_r = min_pixel_val;
+				// result_g = min_pixel_val;
+				// result_b = min_pixel_val;
+			}
+			else 
+			{
+				if (curr_pixel.r > max_pixel_val)
+				{
+					result_r = max_pixel_val;
+					// result_g = min_pixel_val;
+					// result_b = min_pixel_val;
+				}
+				else
+				{
+					result_r = curr_pixel.r;
+				}
+			}
+
+			// res.push(result_r);
+			// console.log(res);
+
+			temp_pixel_matrix[y][x].r = Math.abs(parseFloat(result_r));
+			temp_pixel_matrix[y][x].g = Math.abs(parseFloat(result_r));
+			temp_pixel_matrix[y][x].b = Math.abs(parseFloat(result_r));
+		}
+	}
+
+	return temp_pixel_matrix;
+}
+
+
+function averageFilter(matrix, image_data)
+{
+	/* MASUKAN HARUS GRAYSCALE */
+	var pixel_matrix = matrix;
+	var temp_pixel_matrix = makeZeroMatrix(image_data);
+	console.log('averageFilters...');
+		
+	for (var y = 1; y < pixel_matrix.length - 1; y ++) {
+		for (var x = 1; x < pixel_matrix[y].length - 1; x++) {
+
+			curr_pixel = pixel_matrix[y][x];
+			temp_pixel_1 = pixel_matrix[y-1][x-1];
+			temp_pixel_2 = pixel_matrix[y-1][x];
+			temp_pixel_3 = pixel_matrix[y-1][x+1];
+			temp_pixel_4 = pixel_matrix[y][x-1];
+			temp_pixel_5 = pixel_matrix[y][x+1];
+			temp_pixel_6 = pixel_matrix[y+1][x-1];
+			temp_pixel_7 = pixel_matrix[y+1][x];
+			temp_pixel_8 = pixel_matrix[y+1][x+1];
+			
+			sum_pixel = temp_pixel_1.r + temp_pixel_2.r + temp_pixel_3.r + temp_pixel_4.r + temp_pixel_5.r + temp_pixel_6.r + temp_pixel_7.r + temp_pixel_8.r;
+			// console.log(edge_filter_arr);
+
+			// proses average filter
+			result_r = sum_pixel / 9;
+			
+			// result_g = curr_pixel.g;
+			// result_b = curr_pixel.b;
+
+			temp_pixel_matrix[y][x].r = Math.abs(parseFloat(result_r));
+			temp_pixel_matrix[y][x].g = Math.abs(parseFloat(result_r));
+			temp_pixel_matrix[y][x].b = Math.abs(parseFloat(result_r));
+		}
+	}
+
+	return temp_pixel_matrix;
+}
+
+function medianFilter(matrix, image_data)
+{
+	/* MASUKAN HARUS GRAYSCALE */
+	var pixel_matrix = matrix;
+	var temp_pixel_matrix = makeZeroMatrix(image_data);
+	console.log('averageFilters...');
+		
+	for (var y = 1; y < pixel_matrix.length - 1; y ++) {
+		for (var x = 1; x < pixel_matrix[y].length - 1; x++) {
+
+			// proses median filter
+			temp_pixel = new Uint8Array(9);
+
+			temp_pixel[0] = Math.abs(pixel_matrix[y][x].r);
+			temp_pixel[1] = Math.abs(pixel_matrix[y-1][x-1].r);
+			temp_pixel[2] = Math.abs(pixel_matrix[y-1][x].r);
+			temp_pixel[3] = Math.abs(pixel_matrix[y-1][x+1].r);
+			temp_pixel[4] = Math.abs(pixel_matrix[y][x-1].r);
+			temp_pixel[5] = Math.abs(pixel_matrix[y][x+1].r);
+			temp_pixel[6] = Math.abs(pixel_matrix[y+1][x-1].r);
+			temp_pixel[7] = Math.abs(pixel_matrix[y+1][x].r);
+			temp_pixel[8] = Math.abs(pixel_matrix[y+1][x+1].r);
+			
+			sorted_pixel = Array.sort(temp_pixel);
+			// console.log(sorted_pixel);
+
+			result_r = sorted_pixel[5];
+			// result_g = curr_pixel.g;
+			// result_b = curr_pixel.b;
 			
 			temp_pixel_matrix[y][x].r = Math.abs(parseFloat(result_r));
 			temp_pixel_matrix[y][x].g = Math.abs(parseFloat(result_r));
@@ -122,6 +233,12 @@ function processPixelAdjacency (image_data)
 	
 	if (image_data.mode == 'edge-filter') {
 		temp_m = edgeFilter(m, image_data); 
+	}
+	else if (image_data.mode == 'average-filter') {
+		temp_m = averageFilter(m, image_data); 
+	}
+	else if (image_data.mode == 'median-filter') {
+		temp_m = medianFilter(m, image_data); 
 	}
 
 	var new_image_data = makeUInt8ClampedArray(temp_m, image_data);
