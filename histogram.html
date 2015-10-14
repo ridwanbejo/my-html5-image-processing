@@ -4,7 +4,7 @@
 		<title>JS Image Processing</title>
 	</head>
 	<body>	
-		<h1>Canvas Image Processing - Edge Detection</h1>
+		<h1>Canvas Image Processing - Histogram</h1>
 		<canvas id="viewport" height="500" width="500"></canvas>
 		<br/>
 		<button onclick="changeFilter('original');">original</button>
@@ -12,20 +12,19 @@
 		<button onclick="changeFilter('invert');">invert</button>
 		<button onclick="changeFilter('binary');">binary</button>
 		<br/>
-		<button onclick="edgeDetection('roberts');">roberts</button>
-		<button onclick="edgeDetection('laplacian');">laplacian</button>
-		<button onclick="edgeDetection('prewitt');">prewitt</button>
-		<button onclick="edgeDetection('sobel');">sobel</button>
-		<button onclick="edgeDetection('freiChen');">frei_chen</button>
+		<button onclick="histogram();">histogram</button>
+		<button onclick="grayscale_clipping();">grayscale clipping</button>
+		<button onclick="equalization();">equalization</button>
 		<br/><br/>
 		<ul>
-			<li>threshold: <input type="text" id="threshold" /></li> 
+			<li>threshold - 1: <input type="text" id="threshold" /></li> 
+			<li>threshold - 2: <input type="text" id="threshold2" /></li> 
 		</ul>
 		
 		<script type="text/javascript">
 			var canvas = document.getElementById('viewport');
 			var context = canvas.getContext('2d');
-			var image_src = "./img/demo_3.jpg";
+			var image_src = "./img/demo_1.jpg";
 
 			function getImgCanvasSize(width, height)
             {
@@ -179,20 +178,79 @@
 				return pixels;
 			}
 
-			function edgeDetection(mode){
-
-				var canvas = document.getElementById('viewport');
-				var context = canvas.getContext('2d');
+			function histogram()
+			{
+				/*
+					Data gambar yang diterima harus grayscale
+				*/
 				var imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+				var data = imageData.data;
+				var histogram = new Array(256);
+
+				for (var idx = 0; idx <  histogram.length; idx ++ )
+				{
+					histogram[idx] = 0;	
+				}
+
+				for (var idx=0; idx<data.length; idx+=4) {
+					r = parseInt(data[idx]);
+					histogram[r] = histogram[r] + 1;
+				}
+
+				console.log(histogram);
+			}
+
+			function grayscale_clipping()
+			{
+				/*
+					Data gambar yang diterima harus grayscale
+				*/
+				var pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+				var d = pixels.data;
+				threshold_val = document.getElementById('threshold').value;
+				threshold_val2 = document.getElementById('threshold2').value;
 				
-				var worker = new Worker('worker/edge-detection.js');
+				for (var i=0; i<d.length; i+=4) {
 				
-				worker.postMessage({ 'canvas_width' : canvas.width, 'canvas_height': canvas.height, 'imageData': imageData.data, 'mode': mode });
+					var r = d[i];
+					var g = d[i+1];
+					var b = d[i+2];
+					var v = 0;
+
+					if (r <= threshold_val) 
+					{
+						v = 0;
+					} 
+					
+					if (r >= threshold_val2)
+					{
+						v = 255;
+					}
+
+					d[i] = d[i+1] = d[i+2] = v;
+				}
+				
+				pixels.data = d;
+
+				context.putImageData(pixels, 0, 0);
+			}
+
+			function equalization()
+			{
+				/*
+					Data gambar yang diterima harus grayscale
+				*/
+				var pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+				var d = pixels.data;
+
+				var worker = new Worker('worker/histogram.js');
+				
+				worker.postMessage({ 'canvas_width' : canvas.width, 'canvas_height': canvas.height, 'imageData': pixels.data, 'mode': 'equalization' });
 
 				worker.onmessage = function(e) { 
 					console.log('on message dari webworker user....');
+					
 					imageDataTemp = new ImageData(e.data.new_image_data, canvas.width, canvas.height);
-						
 					context.putImageData(imageDataTemp, 0, 0);
 				};
 
@@ -200,6 +258,8 @@
 					console.log('worker error...');
 					console.log(e);
 				}
+
+				
 			}
 
 		</script>

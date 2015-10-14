@@ -4,7 +4,7 @@
 		<title>JS Image Processing</title>
 	</head>
 	<body>	
-		<h1>Canvas Image Processing - Edge Detection</h1>
+		<h1>Canvas Image Processing - Pixel Adjacency</h1>
 		<canvas id="viewport" height="500" width="500"></canvas>
 		<br/>
 		<button onclick="changeFilter('original');">original</button>
@@ -12,20 +12,18 @@
 		<button onclick="changeFilter('invert');">invert</button>
 		<button onclick="changeFilter('binary');">binary</button>
 		<br/>
-		<button onclick="edgeDetection('roberts');">roberts</button>
-		<button onclick="edgeDetection('laplacian');">laplacian</button>
-		<button onclick="edgeDetection('prewitt');">prewitt</button>
-		<button onclick="edgeDetection('sobel');">sobel</button>
-		<button onclick="edgeDetection('freiChen');">frei_chen</button>
-		<br/><br/>
+		<button onclick="pixelAdjacency('edge-filter');">edge filter</button>
+		<br/>
 		<ul>
-			<li>threshold: <input type="text" id="threshold" /></li> 
+			<li>threshold - 1: <input type="text" id="threshold" /></li> 
 		</ul>
 		
 		<script type="text/javascript">
+			/* INIITIALIZATION*/
+			
 			var canvas = document.getElementById('viewport');
 			var context = canvas.getContext('2d');
-			var image_src = "./img/demo_3.jpg";
+			var image_src = "./img/demo_7.png";
 
 			function getImgCanvasSize(width, height)
             {
@@ -68,6 +66,31 @@
 				}
 			};
 			
+			/* MAIN FUNCTION */
+			function pixelAdjacency(mode){
+
+				var canvas = document.getElementById('viewport');
+				var context = canvas.getContext('2d');
+				var imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+				
+				var worker = new Worker('worker/pixel-adjacency.js');
+				
+				worker.postMessage({ 'canvas_width' : canvas.width, 'canvas_height': canvas.height, 'imageData': imageData.data, 'mode': mode });
+
+				worker.onmessage = function(e) { 
+					console.log('on message dari webworker user....');
+					// imageDataTemp = new ImageData(e.data.new_image_data, canvas.width, canvas.height);
+						
+					// context.putImageData(imageDataTemp, 0, 0);
+				};
+
+				worker.onerror = function (e) {
+					console.log('worker error...');
+					console.log(e);
+				}
+			}
+
+			/* HELPER */
 			function changeFilter (mode){
 
 				if (mode == 'original') {
@@ -179,29 +202,7 @@
 				return pixels;
 			}
 
-			function edgeDetection(mode){
-
-				var canvas = document.getElementById('viewport');
-				var context = canvas.getContext('2d');
-				var imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-				
-				var worker = new Worker('worker/edge-detection.js');
-				
-				worker.postMessage({ 'canvas_width' : canvas.width, 'canvas_height': canvas.height, 'imageData': imageData.data, 'mode': mode });
-
-				worker.onmessage = function(e) { 
-					console.log('on message dari webworker user....');
-					imageDataTemp = new ImageData(e.data.new_image_data, canvas.width, canvas.height);
-						
-					context.putImageData(imageDataTemp, 0, 0);
-				};
-
-				worker.onerror = function (e) {
-					console.log('worker error...');
-					console.log(e);
-				}
-			}
-
+			
 		</script>
 	</body>
 </html>
