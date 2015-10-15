@@ -223,6 +223,54 @@ function medianFilter(matrix, image_data)
 	return temp_pixel_matrix;
 }
 
+function convolution(matrix, image_data, filter)
+{
+	/* MASUKAN HARUS GRAYSCALE */
+	console.log('convolution...');
+	
+	var pixel_matrix = matrix;
+	var temp_pixel_matrix = makeZeroMatrix(image_data);
+	
+	filter_height = filter.length;
+	filter_width = filter[0].length;
+
+	m2 = Math.floor(filter_height / 2);
+	n2 = Math.floor(filter_width / 2);
+	
+	// console.log([m2, n2]);
+	// console.log(filter);
+
+	for (var y = m2 + 1; y < pixel_matrix.length -  m2; y ++) {
+		for (var x = n2 + 1; x < pixel_matrix[y].length - n2; x++) {
+
+			// proses convolution filter
+			result = 0;
+			for (var p = -m2; p <= m2; p++)
+			{
+				for (var q = -n2; q <= n2; q++)
+				{
+					// console.log(filter[p+m2][q+n2]);
+
+					temp_result = filter[p+m2][q+n2] * pixel_matrix[y-p][x-q].r;
+					result = result + temp_result;
+				}
+			}
+
+			// console.log(result);
+			
+			result_r = result;
+			// result_g = curr_pixel.g;
+			// result_b = curr_pixel.b;
+			
+			temp_pixel_matrix[y-m2][x-n2].r = Math.abs(parseFloat(result_r));
+			temp_pixel_matrix[y-m2][x-n2].g = Math.abs(parseFloat(result_r));
+			temp_pixel_matrix[y-m2][x-n2].b = Math.abs(parseFloat(result_r));
+		}
+	}
+
+	return temp_pixel_matrix;
+}
+
 function processPixelAdjacency (image_data)
 {
 	var m = makeMatrix(image_data);
@@ -239,6 +287,11 @@ function processPixelAdjacency (image_data)
 	}
 	else if (image_data.mode == 'median-filter') {
 		temp_m = medianFilter(m, image_data); 
+	}
+	
+	else if (image_data.mode == 'quick-mask') {
+		filter = [[-1, 0, -1], [0, 4, 0], [-1, 0, -1]];
+		temp_m = convolution(m, image_data, filter); 
 	}
 
 	var new_image_data = makeUInt8ClampedArray(temp_m, image_data);

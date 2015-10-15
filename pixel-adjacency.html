@@ -15,6 +15,7 @@
 		<button onclick="pixelAdjacency('edge-filter');">edge filter</button>
 		<button onclick="pixelAdjacency('average-filter');">average filter</button>
 		<button onclick="pixelAdjacency('median-filter');">median filter</button>
+		<button onclick="pixelAdjacency('quick-mask');">quick mask</button>
 		<br/>
 		<ul>
 			<li>threshold - 1: <input type="text" id="threshold" /></li> 
@@ -25,7 +26,7 @@
 			
 			var canvas = document.getElementById('viewport');
 			var context = canvas.getContext('2d');
-			var image_src = "./img/demo_9.jpg";
+			var image_src = "./img/demo_10.png";
 
 			function getImgCanvasSize(width, height)
             {
