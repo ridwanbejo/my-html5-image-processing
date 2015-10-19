@@ -1,4 +1,4 @@
-
+/* LOCAL JS HELPER */
 function makeZeroMatrix (image_data)
 {
 	var pixel_matrix = [];
@@ -80,6 +80,35 @@ function makeUInt8ClampedArray(matrix, image_data)
 	return Uint8ClampedArray(temp_image_data);
 }
 
+function rebuildMatrix(matrix, new_value, operator)
+{
+	var temp_matrix = matrix;
+
+	for (var y = 0; y < temp_matrix.length; y++) {
+		for (var x = 0; x < temp_matrix[0].length; x++) {
+			if (operator == 'plus')
+			{
+				temp_matrix[y][x] = matrix[y][x] + new_value;
+			}
+			else if (operator == 'substract') 
+			{
+				temp_matrix[y][x] = matrix[y][x] - new_value;
+			}
+			else if (operator == 'divide')
+			{
+				temp_matrix[y][x] = matrix[y][x] / new_value;
+			}
+			else if (operator == 'times')
+			{
+				temp_matrix[y][x] = matrix[y][x] * new_value;
+			}
+		}
+	}
+
+	return temp_matrix;
+}
+
+/* FEATURED FUNCTION */
 function edgeFilter(matrix, image_data)
 {
 	/* MASUKAN HARUS GRAYSCALE */
@@ -144,7 +173,6 @@ function edgeFilter(matrix, image_data)
 
 	return temp_pixel_matrix;
 }
-
 
 function averageFilter(matrix, image_data)
 {
@@ -237,9 +265,6 @@ function convolution(matrix, image_data, filter)
 	m2 = Math.floor(filter_height / 2);
 	n2 = Math.floor(filter_width / 2);
 	
-	// console.log([m2, n2]);
-	// console.log(filter);
-
 	for (var y = m2 + 1; y < pixel_matrix.length -  m2; y ++) {
 		for (var x = n2 + 1; x < pixel_matrix[y].length - n2; x++) {
 
@@ -249,15 +274,11 @@ function convolution(matrix, image_data, filter)
 			{
 				for (var q = -n2; q <= n2; q++)
 				{
-					// console.log(filter[p+m2][q+n2]);
-
 					temp_result = filter[p+m2][q+n2] * pixel_matrix[y-p][x-q].r;
 					result = result + temp_result;
 				}
 			}
 
-			// console.log(result);
-			
 			result_r = result;
 			// result_g = curr_pixel.g;
 			// result_b = curr_pixel.b;
@@ -288,14 +309,89 @@ function processPixelAdjacency (image_data)
 	else if (image_data.mode == 'median-filter') {
 		temp_m = medianFilter(m, image_data); 
 	}
-	
 	else if (image_data.mode == 'quick-mask') {
 		filter = [[-1, 0, -1], [0, 4, 0], [-1, 0, -1]];
 		temp_m = convolution(m, image_data, filter); 
 	}
+	else if (image_data.mode == 'low-pass-filter-1') {
+		filter = [[0, 1, 0], [1, 2, 1], [0, 1, 0]];
+		new_filter = rebuildMatrix(filter, 6, 'divide');
+		temp_m = convolution(m, image_data, new_filter); 
+	}
+	else if (image_data.mode == 'low-pass-filter-2') {
+		filter = [[1, 1, 1], [1, 1, 1], [1, 1, 1]];
+		new_filter = rebuildMatrix(filter, 9, 'divide');
+		temp_m = convolution(m, image_data, new_filter); 
+	}
+	else if (image_data.mode == 'low-pass-filter-3') {
+		filter = [[1, 1, 1], [1, 2, 1], [1, 1, 1]];
+		new_filter = rebuildMatrix(filter, 10, 'divide');
+		temp_m = convolution(m, image_data, new_filter); 
+	}
+	else if (image_data.mode == 'low-pass-filter-4') {
+		filter = [[1, 2, 1], [2, 4, 2], [1, 2, 1]];
+		new_filter = rebuildMatrix(filter, 16, 'divide');
+		temp_m = convolution(m, image_data,new_filter); 
+	}
+	else if (image_data.mode == 'sharpen') {
+		filter = [[0, -1, 0], [-1, 5, -1], [0, -1, 0]];
+		temp_m = convolution(m, image_data, filter); 
+	}
+	else if (image_data.mode == 'sharpen-10') {
+		filter = [[-1, -1, -1], [-1, 10, -1], [-1, -1, -1]];
+		temp_m = convolution(m, image_data, filter); 
+	}
+	else if (image_data.mode == 'high-pass-filter-1') {
+		filter = [[0, -1, 0], [-1, 4, -1], [0, -1, 0]];
+		temp_m = convolution(m, image_data, filter); 
+	}
+	else if (image_data.mode == 'high-pass-filter-2') {
+		filter = [[-1, -1, -1], [-1, 8, -1], [-1, -1, -1]];
+		temp_m = convolution(m, image_data, filter); 
+	}
+	else if (image_data.mode == 'high-pass-filter-3') {
+		filter = [[1, -2, 1], [-2, 4, -2], [1, -2, 1]];
+		temp_m = convolution(m, image_data, filter); 
+	}
+	else if (image_data.mode == 'emboss-1') {
+		filter = [[-2, 0, 0], [0, 0, 0], [0, 0, 2]];
+		temp_m = convolution(m, image_data, filter); 
+	}
+	else if (image_data.mode == 'emboss-2') {
+		filter = [[-1, 0, 0], [0, 0, 0], [0, 0, 1]];
+		temp_m = convolution(m, image_data, filter); 
+	}
+	else if (image_data.mode == 'emboss-3') {
+		filter = [[1, 0, 0], [0, 0, 0], [0, 0, -1]];
+		temp_m = convolution(m, image_data, filter); 
+	}
+	else if (image_data.mode == 'emboss-4') {
+		filter = [[0, 0, 0], [-4, 0, 4], [0, 0, 0]];
+		temp_m = convolution(m, image_data, filter); 
+	}
+	else if (image_data.mode == 'emboss-5') {
+		filter = [[-4, -4, 0], [-4, 1, 4], [0, 4, 4]];
+		temp_m = convolution(m, image_data, filter); 
+	}
+	else if (image_data.mode == 'emboss-6') {
+		filter = [[-6, 0, 6], [-6, 1, 6], [-6, 0, 6]];
+		temp_m = convolution(m, image_data, filter); 
+	}
+	else if (image_data.mode == 'emboss-7') {
+		filter = [[4, 4, 0], [4, 1, -4], [0, -4, -4]];
+		temp_m = convolution(m, image_data, filter); 
+	}
+	else if (image_data.mode == 'emboss-8') {
+		filter = [[6, 0, -6], [6, 1, -6], [6, 0, -6]];
+		temp_m = convolution(m, image_data, filter); 
+	}
+	else if (image_data.mode == 'gaussian') {
+		filter = [[1,5,7,5,1], [5,20,33,20,5], [7,33,55,33,7], [5,20,33,20,5], [1,5,7,5,1]];
+		new_filter = rebuildMatrix(filter, 339, 'divide');
+		temp_m = convolution(m, image_data, new_filter); 
+	}
 
 	var new_image_data = makeUInt8ClampedArray(temp_m, image_data);
-
 	self.postMessage({'new_image_data':new_image_data});
 }
 	

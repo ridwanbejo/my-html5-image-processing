@@ -4,7 +4,7 @@
 		<title>JS Image Processing</title>
 	</head>
 	<body>	
-		<h1>Canvas Image Processing - Pixel Adjacency</h1>
+		<h1>Canvas Image Processing - Geometric</h1>
 		<canvas id="viewport" height="500" width="500"></canvas>
 		<br/>
 		<button onclick="changeFilter('original');">original</button>
@@ -12,32 +12,14 @@
 		<button onclick="changeFilter('invert');">invert</button>
 		<button onclick="changeFilter('binary');">binary</button>
 		<br/>
-		<button onclick="pixelAdjacency('edge-filter');">edge filter</button>
-		<button onclick="pixelAdjacency('average-filter');">average filter</button>
-		<button onclick="pixelAdjacency('median-filter');">median filter</button>
-		<button onclick="pixelAdjacency('quick-mask');">quick mask</button>
-		<button onclick="pixelAdjacency('gaussian');">gaussian</button>
+		<button onclick="geometric('translation');">translation</button>
+		<button onclick="geometric('rotation');">rotation</button>
+		<button onclick="geometric('interpolation');">interpolation</button>
+		<button onclick="geometric('specified-rotation');">specified rotation</button>
 		<br/>
-		<button onclick="pixelAdjacency('low-pass-filter-1');">low pass filter #1</button>
-		<button onclick="pixelAdjacency('low-pass-filter-2');">low pass filter #2</button>
-		<button onclick="pixelAdjacency('low-pass-filter-3');">low pass filter #3</button>
-		<button onclick="pixelAdjacency('low-pass-filter-4');">low pass filter #4</button>
-		<br/>
-		<button onclick="pixelAdjacency('high-pass-filter-1');">high pass filter #1</button>
-		<button onclick="pixelAdjacency('high-pass-filter-2');">high pass filter #2</button>
-		<button onclick="pixelAdjacency('high-pass-filter-3');">high pass filter #3</button>
-		<button onclick="pixelAdjacency('sharpen');">sharpen</button>
-		<button onclick="pixelAdjacency('sharpen-10');">sharpen-10</button>
-		<br/>
-		<button onclick="pixelAdjacency('emboss-1');">emboss #1</button>
-		<button onclick="pixelAdjacency('emboss-2');">emboss #2</button>
-		<button onclick="pixelAdjacency('emboss-3');">emboss #3</button>
-		<button onclick="pixelAdjacency('emboss-3');">emboss #4</button>
-		<br/>
-		<button onclick="pixelAdjacency('emboss-5');">emboss #5</button>
-		<button onclick="pixelAdjacency('emboss-6');">emboss #6</button>
-		<button onclick="pixelAdjacency('emboss-7');">emboss #7</button>
-		<button onclick="pixelAdjacency('emboss-8');">emboss #8</button>
+		<button onclick="geometric('zoom-in');">zoom in</button>
+		<button onclick="geometric('zoom-out');">zoom out</button>
+		<button onclick="geometric('mirror');">mirror</button>
 		<br/>
 		<ul>
 			<li>threshold - 1: <input type="text" id="threshold" /></li> 
@@ -49,7 +31,7 @@
 			var context = canvas.getContext('2d');
 			var image_src = "./img/demo_13.jpg";
 
-			
+
 			window.onload = function (){
 
 				var image = new Image();
@@ -67,13 +49,13 @@
 			};
 			
 			/* MAIN FUNCTION */
-			function pixelAdjacency(mode){
+			function geometric(mode){
 
 				var canvas = document.getElementById('viewport');
 				var context = canvas.getContext('2d');
 				var imageData = context.getImageData(0, 0, canvas.width, canvas.height);
 				
-				var worker = new Worker('worker/pixel-adjacency.js');
+				var worker = new Worker('worker/geometric.js');
 				
 				worker.postMessage({ 'canvas_width' : canvas.width, 'canvas_height': canvas.height, 'imageData': imageData.data, 'mode': mode });
 
@@ -226,7 +208,6 @@
                 delete w_ratio;
                 delete h_ratio;
             }
-
 		</script>
 	</body>
 </html>

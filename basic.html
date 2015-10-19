@@ -31,37 +31,7 @@
 			*/
 			var canvas = document.getElementById('viewport');
 			var context = canvas.getContext('2d');
-			var image_src = "./img/demo_4.jpg";
-
-			function getImgCanvasSize(width, height)
-            {
-            	/*
-            		fungsi untuk mengatur rasio gambar yang akan ditampilkan.
-            		menyesuaikan dengan maksimal width dan height.
-            	*/
-
-                var canvas_width = 500;
-                var canvas_height = 500;
-
-                w_ratio = width / width;
-                h_ratio = height / width;
-            
-                if ( width < height)
-                {
-                    w_ratio = width / height;
-                    h_ratio = height / height;
-                }    
-
-                data = {
-                    width: Math.round(canvas_width * w_ratio), 
-                    height : Math.round(canvas_height *  h_ratio), 
-                }
-
-                return data;
-                
-                delete w_ratio;
-                delete h_ratio;
-            }
+			var image_src = "./img/demo_13.jpg";
 
 			window.onload = function (){
 
@@ -372,6 +342,31 @@
 				pixels.data = d;
 				return pixels;
 			}
+
+			function getImgCanvasSize(width, height)
+            {
+                var canvas_width = 500;
+                var canvas_height = 500;
+
+                w_ratio = width / width;
+                h_ratio = height / width;
+            
+                if ( width < height)
+                {
+                    w_ratio = width / height;
+                    h_ratio = height / height;
+                }    
+
+                data = {
+                    width: Math.round(canvas_width * w_ratio), 
+                    height : Math.round(canvas_height *  h_ratio), 
+                }
+
+                return data;
+                
+                delete w_ratio;
+                delete h_ratio;
+            }
 		</script>
 	</body>
 </html>

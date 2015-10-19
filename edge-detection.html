@@ -25,32 +25,7 @@
 		<script type="text/javascript">
 			var canvas = document.getElementById('viewport');
 			var context = canvas.getContext('2d');
-			var image_src = "./img/demo_10.png";
-
-			function getImgCanvasSize(width, height)
-            {
-                var canvas_width = 500;
-                var canvas_height = 500;
-
-                w_ratio = width / width;
-                h_ratio = height / width;
-            
-                if ( width < height)
-                {
-                    w_ratio = width / height;
-                    h_ratio = height / height;
-                }    
-
-                data = {
-                    width: Math.round(canvas_width * w_ratio), 
-                    height : Math.round(canvas_height *  h_ratio), 
-                }
-
-                return data;
-                
-                delete w_ratio;
-                delete h_ratio;
-            }
+			var image_src = "./img/demo_13.jpg";
 
 			window.onload = function (){
 
@@ -67,6 +42,29 @@
 					context.drawImage(image, 0, 0, ratio.width, ratio.height);
 				}
 			};
+
+			function edgeDetection(mode){
+
+				var canvas = document.getElementById('viewport');
+				var context = canvas.getContext('2d');
+				var imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+				
+				var worker = new Worker('worker/edge-detection.js');
+				
+				worker.postMessage({ 'canvas_width' : canvas.width, 'canvas_height': canvas.height, 'imageData': imageData.data, 'mode': mode });
+
+				worker.onmessage = function(e) { 
+					console.log('on message dari webworker user....');
+					imageDataTemp = new ImageData(e.data.new_image_data, canvas.width, canvas.height);
+						
+					context.putImageData(imageDataTemp, 0, 0);
+				};
+
+				worker.onerror = function (e) {
+					console.log('worker error...');
+					console.log(e);
+				}
+			}
 			
 			function changeFilter (mode){
 
@@ -98,6 +96,8 @@
 				
 				image.src = path;
 				
+				console.log(image);
+
 				image.onload = function()
 				{
 					ratio = getImgCanvasSize(image.width, image.height);   
@@ -179,29 +179,30 @@
 				return pixels;
 			}
 
-			function edgeDetection(mode){
+			function getImgCanvasSize(width, height)
+            {
+                var canvas_width = 500;
+                var canvas_height = 500;
 
-				var canvas = document.getElementById('viewport');
-				var context = canvas.getContext('2d');
-				var imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-				
-				var worker = new Worker('worker/edge-detection.js');
-				
-				worker.postMessage({ 'canvas_width' : canvas.width, 'canvas_height': canvas.height, 'imageData': imageData.data, 'mode': mode });
+                w_ratio = width / width;
+                h_ratio = height / width;
+            
+                if ( width < height)
+                {
+                    w_ratio = width / height;
+                    h_ratio = height / height;
+                }    
 
-				worker.onmessage = function(e) { 
-					console.log('on message dari webworker user....');
-					imageDataTemp = new ImageData(e.data.new_image_data, canvas.width, canvas.height);
-						
-					context.putImageData(imageDataTemp, 0, 0);
-				};
+                data = {
+                    width: Math.round(canvas_width * w_ratio), 
+                    height : Math.round(canvas_height *  h_ratio), 
+                }
 
-				worker.onerror = function (e) {
-					console.log('worker error...');
-					console.log(e);
-				}
-			}
-
+                return data;
+                
+                delete w_ratio;
+                delete h_ratio;
+            }
 		</script>
 	</body>
 </html>
