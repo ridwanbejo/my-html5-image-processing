@@ -328,9 +328,6 @@ function specifiedRotation(matrix, image_data)
 	var result_g;
 	var result_b;
 	
-	console.log(m);
-	console.log(n);
-
 	for (var y = 1; y < pixel_matrix.length; y ++) {
 		for (var x = 1; x < pixel_matrix[y].length; x++) {
 			new_x = (x - n) * cos_a + (y - m) * sin_a + n;
@@ -382,15 +379,15 @@ function specifiedRotation(matrix, image_data)
 	return temp_pixel_matrix;
 }
 
-function zoomIn(matrix, image_data)
+function zoom(matrix, image_data, scalex, scaley)
 {
-	console.log('specifiedRotation is executed');
+	console.log('zoom is executed');
 
 	var pixel_matrix = matrix;
 	var temp_pixel_matrix = makeZeroMatrix(image_data);
 	
-	var sx = 1.5;
-	var sy = 1.5;
+	var sx = scalex;
+	var sy = scaley;
 	
 	new_width = pixel_matrix[0].length * sx;
 	new_height = pixel_matrix.length * sy;
@@ -434,6 +431,213 @@ function zoomIn(matrix, image_data)
 	return temp_pixel_matrix;
 }
 
+function flip(matrix, image_data, mode)
+{
+	console.log('flip is executed');
+
+	var pixel_matrix = matrix;
+	var temp_pixel_matrix = makeZeroMatrix(image_data);
+	
+	var result_r;
+	var result_g;
+	var result_b;
+	var temp_pixel = {};
+	var height = pixel_matrix.length;
+	var width = pixel_matrix[0].length;
+
+	for (var y = 1; y < height; y ++) {
+		for (var x = 1; x < width; x++) {
+
+			if (mode == 'horizontal')
+			{
+				x2 = width - x + 1;
+				if (pixel_matrix[y] == undefined || pixel_matrix[y][x2] == undefined)
+				{
+					continue;
+				}
+				else {
+					temp_pixel = pixel_matrix[y][x2];
+				}
+			}
+			else 
+			{
+				y2 = height - y + 1;
+				if (pixel_matrix[y2] == undefined || pixel_matrix[y2][x] == undefined)
+				{
+					continue;
+				}
+				else {
+					temp_pixel = pixel_matrix[y2][x];
+				}
+			}
+
+			result_r = temp_pixel.r;
+			result_g = temp_pixel.g;
+			result_b = temp_pixel.b;
+			
+			temp_pixel_matrix[y][x].r = Math.abs(parseFloat(result_r));
+			temp_pixel_matrix[y][x].g = Math.abs(parseFloat(result_g));
+			temp_pixel_matrix[y][x].b = Math.abs(parseFloat(result_b));
+		
+		}
+	}
+
+	return temp_pixel_matrix;
+}
+
+function full_rotation (matrix, image_data)
+{
+	/* WORK IN PROGRESS */
+}
+
+function interpolate_zoom (matrix, image_data, scalex, scaley)
+{
+	/* WORK IN PROGRESS */
+	console.log('zoom is executed');
+
+	var pixel_matrix = matrix;
+	var temp_pixel_matrix = makeZeroMatrix(image_data);
+	
+	var sx = scalex;
+	var sy = scaley;
+	
+	new_width = pixel_matrix[0].length * sx;
+	new_height = pixel_matrix.length * sy;
+
+	var result_r;
+	var result_g;
+	var result_b;
+	var temp_pixel;
+
+	for (var y = 1; y < new_height; y ++) {
+		y2 = ((y - 1) / sy) + 1;
+		for (var x = 1; x < new_width; x++) {
+			x2 = ((x - 1) / sx) + 1
+
+			if (pixel_matrix[Math.floor(y2)] == undefined || pixel_matrix[Math.floor(y2)][Math.floor(x2)] == undefined)
+			{
+				continue;
+			}
+			else
+			{
+				p = Math.floor(y2);
+				q = Math.floor(x2);
+				a = y2 - p;
+				b = x2 - q;
+
+				if (pixel_matrix[y] == undefined || pixel_matrix[y][x] == undefined)
+				{
+					continue;
+				}
+				else 
+				{
+					if ( (p == pixel_matrix[y].length ) || ( q == pixel_matrix.length ) )
+					{
+						result_r = pixel_matrix[p][q].r;
+						result_g = pixel_matrix[p][q].g;
+						result_b = pixel_matrix[p][q].b;
+					}
+					else
+					{
+						if (pixel_matrix[p][q+1] == undefined || pixel_matrix[p+1][q+1] == undefined || pixel_matrix[p+1][q] == undefined)
+						{
+							continue;
+						}
+						else
+						{
+							intensity_r = (1 - a) * ((1-b)*pixel_matrix[p][q].r + b * pixel_matrix[p][q+1].r) + a * ((1-b)* pixel_matrix[p+1][q].r + b * pixel_matrix[p+1][q+1].r);
+							intensity_g = (1 - a) * ((1-b)*pixel_matrix[p][q].g + b * pixel_matrix[p][q+1].g) + a * ((1-b)* pixel_matrix[p+1][q].g + b * pixel_matrix[p+1][q+1].g);
+							intensity_b = (1 - a) * ((1-b)*pixel_matrix[p][q].b + b * pixel_matrix[p][q+1].b) + a * ((1-b)* pixel_matrix[p+1][q].b + b * pixel_matrix[p+1][q+1].b);
+							
+							result_r = intensity_r;
+							result_g = intensity_g;
+							result_b = intensity_b;	
+						}
+						
+					}
+				}
+				
+				if (temp_pixel_matrix[y] == undefined || temp_pixel_matrix[y][x] == undefined)
+				{
+					continue;
+				}
+				else
+				{
+					temp_pixel_matrix[y][x].r = Math.abs(parseFloat(result_r));
+					temp_pixel_matrix[y][x].g = Math.abs(parseFloat(result_g));
+					temp_pixel_matrix[y][x].b = Math.abs(parseFloat(result_b));
+				}
+			}
+		}
+	}
+
+	return temp_pixel_matrix;
+}
+
+function affine (matrix, image_data, a11, a12, a21, a22, tx, ty)
+{
+	console.log('affine is executed');
+	
+	var pixel_matrix = matrix;
+	var temp_pixel_matrix = makeZeroMatrix(image_data);
+	
+	var result_r;
+	var result_g;
+	var result_b;
+	
+
+	for (var y = 1; y < pixel_matrix.length; y ++) {
+		for (var x = 1; x < pixel_matrix[y].length; x++) {
+			new_x = a11 * x + a12 * y + tx;
+			new_y = a21 * x + a22 * y + ty;
+			
+			result_r = 0;
+			result_g = 0;
+			result_b = 0;
+
+			if (((new_x >= 1) && (new_x <= pixel_matrix[y].length)) && ((new_y >= 1) && (new_y <= pixel_matrix.length)))
+			{
+				p = Math.floor(new_y);
+				q = Math.floor(new_x);
+				a = new_y - p;
+				b = new_x - q;
+
+				if ( (new_x == pixel_matrix[y].length ) || ( new_y == pixel_matrix.length ) )
+				{
+					result_r = pixel_matrix[p][q].r;
+					result_g = pixel_matrix[p][q].g;
+					result_b = pixel_matrix[p][q].b;
+				}
+				else
+				{
+					if (pixel_matrix[p+1] == undefined || pixel_matrix[p][q+1] == undefined || pixel_matrix[p+1][q+1] == undefined || pixel_matrix[p+1][q] == undefined)
+					{
+						continue;
+					}
+					else
+					{
+						intensity_r = (1 - a) * ((1-b)*pixel_matrix[p][q].r + b * pixel_matrix[p][q+1].r) + a * ((1-b)* pixel_matrix[p+1][q].r + b * pixel_matrix[p+1][q+1].r);
+						intensity_g = (1 - a) * ((1-b)*pixel_matrix[p][q].g + b * pixel_matrix[p][q+1].g) + a * ((1-b)* pixel_matrix[p+1][q].g + b * pixel_matrix[p+1][q+1].g);
+						intensity_b = (1 - a) * ((1-b)*pixel_matrix[p][q].b + b * pixel_matrix[p][q+1].b) + a * ((1-b)* pixel_matrix[p+1][q].b + b * pixel_matrix[p+1][q+1].b);
+						
+						result_r = intensity_r;
+						result_g = intensity_g;
+						result_b = intensity_b;	
+					}
+					
+				}
+			}
+					
+			temp_pixel_matrix[y][x].r = Math.abs(parseFloat(result_r));
+			temp_pixel_matrix[y][x].g = Math.abs(parseFloat(result_g));
+			temp_pixel_matrix[y][x].b = Math.abs(parseFloat(result_b));
+		}
+	}
+
+	return temp_pixel_matrix;
+}
+
+
 function processPixelAdjacency (image_data)
 {
 	var m = makeMatrix(image_data);
@@ -455,13 +659,29 @@ function processPixelAdjacency (image_data)
 		temp_m = specifiedRotation(m, image_data); 
 	}
 	else if (image_data.mode == 'zoom-in') {
-		temp_m = zoomIn(m, image_data); 
+		temp_m = zoom(m, image_data, 1.5, 1.5); 
+	}
+	else if (image_data.mode == 'zoom-out') {
+		temp_m = zoom(m, image_data, 0.5, 0.5); 
+	}
+	else if (image_data.mode == 'interpolate-zoom') {
+		temp_m = interpolate_zoom(m, image_data, 1.5, 1.5); 
+	}
+	else if (image_data.mode == 'flip') {
+		temp_m = flip(m, image_data, 'horizontal'); 
+	}
+	else if (image_data.mode == 'vertical-flip') {
+		temp_m = flip(m, image_data, 'vertical'); 
+	}
+	else if (image_data.mode == 'affine') {
+		rad = 10 * 3.14 / 180;
+		temp_m = affine(m, image_data, (2 * Math.cos(rad)), Math.sin(rad), (-1 * Math.sin(rad)), (2 * Math.cos(rad)), -30, -50); 
 	}
 
 	var new_image_data = makeUInt8ClampedArray(temp_m, image_data);
 	self.postMessage({'new_image_data':new_image_data});
 }
-	
+
 self.onmessage = function(e) {
   	console.log('this is a message from worker...');
 	processPixelAdjacency(e.data);
