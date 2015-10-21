@@ -23,7 +23,12 @@ function makeZeroMatrix (image_data)
 		pixel_matrix.push(pixel_matrix_row);
 		pixel_matrix_row = [];
 	}
-
+	
+	delete pixel_item;
+	delete idx;
+	delete pixel_matrix_row;
+	delete pixel_data;
+	
 	return pixel_matrix;
 }
 
@@ -107,7 +112,6 @@ function rebuildMatrix(matrix, new_value, operator)
 
 	return temp_matrix;
 }
-
 
 function convolution(matrix, image_data, filter)
 {
@@ -637,6 +641,68 @@ function affine (matrix, image_data, a11, a12, a21, a22, tx, ty)
 	return temp_pixel_matrix;
 }
 
+function ripple (matrix, image_data, ax, ay, tx, ty)
+{
+	console.log('affine is executed');
+	
+	var pixel_matrix = matrix;
+	var temp_pixel_matrix = makeZeroMatrix(image_data);
+	
+	var result_r;
+	var result_g;
+	var result_b;
+	
+
+	for (var y = 1; y < pixel_matrix.length; y ++) {
+		for (var x = 1; x < pixel_matrix[y].length; x++) {
+			new_x = x + ax * Math.sin(2 * 3.14 * y / tx);
+			new_y = y + ay * Math.sin(2 * 3.14 * x / ty);
+			
+			result_r = 0;
+			result_g = 0;
+			result_b = 0;
+
+			if (((new_x >= 1) && (new_x <= pixel_matrix[y].length)) && ((new_y >= 1) && (new_y <= pixel_matrix.length)))
+			{
+				p = Math.floor(new_y);
+				q = Math.floor(new_x);
+				a = new_y - p;
+				b = new_x - q;
+
+				if ( (new_x == pixel_matrix[y].length ) || ( new_y == pixel_matrix.length ) )
+				{
+					result_r = pixel_matrix[p][q].r;
+					result_g = pixel_matrix[p][q].g;
+					result_b = pixel_matrix[p][q].b;
+				}
+				else
+				{
+					if (pixel_matrix[p+1] == undefined || pixel_matrix[p][q+1] == undefined || pixel_matrix[p+1][q+1] == undefined || pixel_matrix[p+1][q] == undefined)
+					{
+						continue;
+					}
+					else
+					{
+						intensity_r = (1 - a) * ((1-b)*pixel_matrix[p][q].r + b * pixel_matrix[p][q+1].r) + a * ((1-b)* pixel_matrix[p+1][q].r + b * pixel_matrix[p+1][q+1].r);
+						intensity_g = (1 - a) * ((1-b)*pixel_matrix[p][q].g + b * pixel_matrix[p][q+1].g) + a * ((1-b)* pixel_matrix[p+1][q].g + b * pixel_matrix[p+1][q+1].g);
+						intensity_b = (1 - a) * ((1-b)*pixel_matrix[p][q].b + b * pixel_matrix[p][q+1].b) + a * ((1-b)* pixel_matrix[p+1][q].b + b * pixel_matrix[p+1][q+1].b);
+						
+						result_r = intensity_r;
+						result_g = intensity_g;
+						result_b = intensity_b;	
+					}
+					
+				}
+			}
+					
+			temp_pixel_matrix[y][x].r = Math.abs(parseFloat(result_r));
+			temp_pixel_matrix[y][x].g = Math.abs(parseFloat(result_g));
+			temp_pixel_matrix[y][x].b = Math.abs(parseFloat(result_b));
+		}
+	}
+
+	return temp_pixel_matrix;
+}
 
 function processPixelAdjacency (image_data)
 {
@@ -676,6 +742,9 @@ function processPixelAdjacency (image_data)
 	else if (image_data.mode == 'affine') {
 		rad = 10 * 3.14 / 180;
 		temp_m = affine(m, image_data, (2 * Math.cos(rad)), Math.sin(rad), (-1 * Math.sin(rad)), (2 * Math.cos(rad)), -30, -50); 
+	}
+	else if (image_data.mode == 'ripple') {
+		temp_m = ripple(m, image_data, 15, 15, 120,250); 
 	}
 
 	var new_image_data = makeUInt8ClampedArray(temp_m, image_data);
