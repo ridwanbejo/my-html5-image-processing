@@ -643,7 +643,7 @@ function affine (matrix, image_data, a11, a12, a21, a22, tx, ty)
 
 function ripple (matrix, image_data, ax, ay, tx, ty)
 {
-	console.log('affine is executed');
+	console.log('ripple is executed');
 	
 	var pixel_matrix = matrix;
 	var temp_pixel_matrix = makeZeroMatrix(image_data);
@@ -652,7 +652,6 @@ function ripple (matrix, image_data, ax, ay, tx, ty)
 	var result_g;
 	var result_b;
 	
-
 	for (var y = 1; y < pixel_matrix.length; y ++) {
 		for (var x = 1; x < pixel_matrix[y].length; x++) {
 			new_x = x + ax * Math.sin(2 * 3.14 * y / tx);
@@ -704,7 +703,229 @@ function ripple (matrix, image_data, ax, ay, tx, ty)
 	return temp_pixel_matrix;
 }
 
-function processPixelAdjacency (image_data)
+function twirl(matrix, image_data)
+{
+	console.log('twirl is executed');
+	
+	var pixel_matrix = matrix;
+	var temp_pixel_matrix = makeZeroMatrix(image_data);
+	
+	var height = pixel_matrix.length;
+	var width = pixel_matrix[0].length;
+	var xc = Math.round(width / 2);
+	var yc = Math.round(height / 2);
+
+	var alpha = 43 * 3.14 / 180;
+	rmax = 0.5 * Math.sqrt( Math.pow(xc, 2) + Math.pow(yc, 2));
+
+	var result_r;
+	var result_g;
+	var result_b;
+	
+	for (var y = 1; y < height; y ++) {
+		for (var x = 1; x < width; x++) {
+			r = Math.sqrt(Math.pow((x - xc), 2) + Math.pow((y - yc), 2));
+			beta = Math.atan2(y-yc, x-xc) + alpha * (rmax - r) / rmax;
+			
+			new_x = xc + r * Math.cos(beta);
+			new_y = yc + r * Math.sin(beta);
+			
+			result_r = 0;
+			result_g = 0;
+			result_b = 0;
+
+			if (((new_x >= 1) && (new_x <= pixel_matrix[y].length)) && ((new_y >= 1) && (new_y <= pixel_matrix.length)))
+			{
+				p = Math.floor(new_y);
+				q = Math.floor(new_x);
+				a = new_y - p;
+				b = new_x - q;
+
+				if ( (new_x == pixel_matrix[y].length ) || ( new_y == pixel_matrix.length ) )
+				{
+					result_r = pixel_matrix[p][q].r;
+					result_g = pixel_matrix[p][q].g;
+					result_b = pixel_matrix[p][q].b;
+				}
+				else
+				{
+					if (pixel_matrix[p+1] == undefined || pixel_matrix[p][q+1] == undefined || pixel_matrix[p+1][q+1] == undefined || pixel_matrix[p+1][q] == undefined)
+					{
+						continue;
+					}
+					else
+					{
+						intensity_r = (1 - a) * ((1-b)*pixel_matrix[p][q].r + b * pixel_matrix[p][q+1].r) + a * ((1-b)* pixel_matrix[p+1][q].r + b * pixel_matrix[p+1][q+1].r);
+						intensity_g = (1 - a) * ((1-b)*pixel_matrix[p][q].g + b * pixel_matrix[p][q+1].g) + a * ((1-b)* pixel_matrix[p+1][q].g + b * pixel_matrix[p+1][q+1].g);
+						intensity_b = (1 - a) * ((1-b)*pixel_matrix[p][q].b + b * pixel_matrix[p][q+1].b) + a * ((1-b)* pixel_matrix[p+1][q].b + b * pixel_matrix[p+1][q+1].b);
+						
+						result_r = intensity_r;
+						result_g = intensity_g;
+						result_b = intensity_b;	
+					}
+					
+				}
+			}
+					
+			temp_pixel_matrix[y][x].r = Math.abs(parseFloat(result_r));
+			temp_pixel_matrix[y][x].g = Math.abs(parseFloat(result_g));
+			temp_pixel_matrix[y][x].b = Math.abs(parseFloat(result_b));
+		}
+	}
+
+	return temp_pixel_matrix;
+}
+
+function bilinear (matrix, image_data, a1, a2, a3, a4, b1, b2, b3, b4)
+{
+	console.log('bilinear is executed');
+	
+	var pixel_matrix = matrix;
+	var temp_pixel_matrix = makeZeroMatrix(image_data);
+	
+	var height = pixel_matrix.length;
+	var width = pixel_matrix[0].length;
+
+	var result_r;
+	var result_g;
+	var result_b;
+	
+	for (var y = 1; y < height; y ++) {
+		for (var x = 1; x < width; x++) {
+			new_x = a1 * x + a2 * y + a3 * x * y + a4 ;
+			new_y = b1 * x + b2 * y + b3 * x * y + b4 ;
+			
+			result_r = 0;
+			result_g = 0;
+			result_b = 0;
+
+			if (((new_x >= 1) && (new_x <= pixel_matrix[y].length)) && ((new_y >= 1) && (new_y <= pixel_matrix.length)))
+			{
+				p = Math.floor(new_y);
+				q = Math.floor(new_x);
+				a = new_y - p;
+				b = new_x - q;
+
+				if ( (new_x == pixel_matrix[y].length ) || ( new_y == pixel_matrix.length ) )
+				{
+					if (pixel_matrix[p] != undefined ){
+						result_r = pixel_matrix[p][q].r;
+						result_g = pixel_matrix[p][q].g;
+						result_b = pixel_matrix[p][q].b;
+					}
+				}
+				else
+				{
+					if (pixel_matrix[p+1] == undefined || pixel_matrix[p][q+1] == undefined || pixel_matrix[p+1][q+1] == undefined || pixel_matrix[p+1][q] == undefined)
+					{
+						continue;
+					}
+					else
+					{
+						intensity_r = (1 - a) * ((1-b)*pixel_matrix[p][q].r + b * pixel_matrix[p][q+1].r) + a * ((1-b)* pixel_matrix[p+1][q].r + b * pixel_matrix[p+1][q+1].r);
+						intensity_g = (1 - a) * ((1-b)*pixel_matrix[p][q].g + b * pixel_matrix[p][q+1].g) + a * ((1-b)* pixel_matrix[p+1][q].g + b * pixel_matrix[p+1][q+1].g);
+						intensity_b = (1 - a) * ((1-b)*pixel_matrix[p][q].b + b * pixel_matrix[p][q+1].b) + a * ((1-b)* pixel_matrix[p+1][q].b + b * pixel_matrix[p+1][q+1].b);
+						
+						result_r = intensity_r;
+						result_g = intensity_g;
+						result_b = intensity_b;	
+					}
+					
+				}
+			}
+					
+			temp_pixel_matrix[y][x].r = Math.abs(parseFloat(result_r));
+			temp_pixel_matrix[y][x].g = Math.abs(parseFloat(result_g));
+			temp_pixel_matrix[y][x].b = Math.abs(parseFloat(result_b));
+		}
+	}
+
+	return temp_pixel_matrix;
+}
+
+function spherical(matrix, image_data, rho)
+{
+	console.log('spherical is executed');
+	
+	var pixel_matrix = matrix;
+	var temp_pixel_matrix = makeZeroMatrix(image_data);
+	
+	var height = pixel_matrix.length;
+	var width = pixel_matrix[0].length;
+	var xc = Math.round(width / 2);
+	var yc = Math.round(height / 2);
+	
+	rmax = xc;
+
+	var result_r;
+	var result_g;
+	var result_b;
+	
+	for (var y = 1; y < height; y ++) {
+		for (var x = 1; x < width; x++) {
+			r = Math.sqrt(Math.pow((x - xc), 2) + Math.pow((y - yc), 2));
+			z = Math.sqrt(Math.pow(rmax, 2) - Math.pow(r, 2))
+			bx = (1 - 1 / rho) * Math.asin((x - xc) / Math.sqrt( Math.pow((x - xc), 2) + Math.pow(z, 2) ));
+			by = (1 - 1 / rho) * Math.asin((y - yc) / Math.sqrt( Math.pow((y - yc), 2) + Math.pow(z, 2) ));
+			
+			if (r <= rmax)
+			{
+				new_x = x - z * Math.tan(bx);
+				new_y = y - z * Math.tan(by);
+			}
+			else 
+			{
+				new_x = x;
+				new_y = y;
+			}
+			
+			result_r = 0;
+			result_g = 0;
+			result_b = 0;
+
+			if (((new_x >= 1) && (new_x <= pixel_matrix[y].length)) && ((new_y >= 1) && (new_y <= pixel_matrix.length)))
+			{
+				p = Math.floor(new_y);
+				q = Math.floor(new_x);
+				a = new_y - p;
+				b = new_x - q;
+
+				if ( (new_x == pixel_matrix[y].length ) || ( new_y == pixel_matrix.length ) )
+				{
+					result_r = pixel_matrix[p][q].r;
+					result_g = pixel_matrix[p][q].g;
+					result_b = pixel_matrix[p][q].b;
+				}
+				else
+				{
+					if (pixel_matrix[p+1] == undefined || pixel_matrix[p][q+1] == undefined || pixel_matrix[p+1][q+1] == undefined || pixel_matrix[p+1][q] == undefined)
+					{
+						continue;
+					}
+					else
+					{
+						intensity_r = (1 - a) * ((1-b)*pixel_matrix[p][q].r + b * pixel_matrix[p][q+1].r) + a * ((1-b)* pixel_matrix[p+1][q].r + b * pixel_matrix[p+1][q+1].r);
+						intensity_g = (1 - a) * ((1-b)*pixel_matrix[p][q].g + b * pixel_matrix[p][q+1].g) + a * ((1-b)* pixel_matrix[p+1][q].g + b * pixel_matrix[p+1][q+1].g);
+						intensity_b = (1 - a) * ((1-b)*pixel_matrix[p][q].b + b * pixel_matrix[p][q+1].b) + a * ((1-b)* pixel_matrix[p+1][q].b + b * pixel_matrix[p+1][q+1].b);
+						
+						result_r = intensity_r;
+						result_g = intensity_g;
+						result_b = intensity_b;	
+					}
+					
+				}
+			}
+					
+			temp_pixel_matrix[y][x].r = Math.abs(parseFloat(result_r));
+			temp_pixel_matrix[y][x].g = Math.abs(parseFloat(result_g));
+			temp_pixel_matrix[y][x].b = Math.abs(parseFloat(result_b));
+		}
+	}
+
+	return temp_pixel_matrix;
+}
+
+function processGeometric (image_data)
 {
 	var m = makeMatrix(image_data);
 	
@@ -746,6 +967,15 @@ function processPixelAdjacency (image_data)
 	else if (image_data.mode == 'ripple') {
 		temp_m = ripple(m, image_data, 15, 15, 120,250); 
 	}
+	else if (image_data.mode == 'twirl') {
+		temp_m = twirl(m, image_data); 
+	}
+	else if (image_data.mode == 'bilinear') {
+		temp_m = bilinear(m, image_data, 1.2, 0.1, 0.005, -45, 0.1, 1, 0.005, -30); 
+	}
+	else if (image_data.mode == 'spherical') {
+		temp_m = spherical(m, image_data, 1.8); 
+	}
 
 	var new_image_data = makeUInt8ClampedArray(temp_m, image_data);
 	self.postMessage({'new_image_data':new_image_data});
@@ -753,5 +983,5 @@ function processPixelAdjacency (image_data)
 
 self.onmessage = function(e) {
   	console.log('this is a message from worker...');
-	processPixelAdjacency(e.data);
+	processGeometric(e.data);
 }
